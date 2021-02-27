@@ -12,9 +12,12 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.geometry.Pose2d;
+import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpiutil.math.MathUtil;
 import frc.robot.Constants.DriveConstants;
@@ -27,12 +30,21 @@ public class DriveSubsystem extends SubsystemBase {
   WPI_TalonFX leftBack = new WPI_TalonFX(1);
   WPI_TalonFX leftFront = new WPI_TalonFX(0);
 
+  Encoder leftEncoder = new Encoder(0,0);
+  Encoder rightEncoder = new Encoder(0,2);
+
+
+
   SpeedControllerGroup left = new SpeedControllerGroup(leftFront, leftBack);
   SpeedControllerGroup right = new SpeedControllerGroup(rightFront, rightBack);
 
   DifferentialDrive diffDrive = new DifferentialDrive(left, right);
   Timer timer = new Timer();
   AHRS gyro = new AHRS();
+  DifferentialDriveOdometry odometry = new DifferentialDriveOdometry(gyro.getRotation2d());
+  
+
+  Pose2d pose;
   /**
    * Creates a new DriveSubsystem.
    */
@@ -58,6 +70,24 @@ public class DriveSubsystem extends SubsystemBase {
   public double getDistance() {
     return DriveConstants.feetPerTick *(leftFront.getSelectedSensorPosition() - rightFront.getSelectedSensorPosition())/2.0;
   } 
+
+  public Pose2d getPose() {
+    return pose;
+  }
+
+  public void tankDriveVolts(double leftVoltage, double rightVoltage) {
+    leftFront.setVoltage(leftVoltage);
+    rightFront.setVoltage(rightVoltage);
+  }
+  public void resetOdometry(Pose2d pose) {
+    resetEncoders();
+    odometry.resetPosition(pose, gyro.getRotation2d());
+  }
+
+  public void resetEncoders() {
+    
+  }
+
 
   //For autonomous practice only
   public void turnRight() {

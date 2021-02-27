@@ -7,16 +7,20 @@
 
 package frc.robot.subsystems;
 
+import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPipelineResult;
+import org.photonvision.PhotonTrackedTarget;
+
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class VisionSubsystem extends SubsystemBase {
-  NetworkTableInstance netTable = NetworkTableInstance.getDefault();
-  NetworkTable visionTable = netTable.getTable("chameleon-vision").getSubTable("Microsoft LifeCam HD-3000");
-  NetworkTableEntry targetPoseEntry = visionTable.getEntry("targetPose");
-  NetworkTableEntry yawEntry =  visionTable.getEntry("yawEntry");
+  PhotonCamera visionCamera = new PhotonCamera("Microsoft LifeCam HD-3000");
+  PhotonPipelineResult powercellPipeline = visionCamera.getLatestResult();
+  PhotonTrackedTarget powercellTarget = powercellPipeline.getBestTarget();
   
   /** 
    * Creates a new VisionSubsystem.
@@ -25,23 +29,29 @@ public class VisionSubsystem extends SubsystemBase {
 
   }
 
+  /**
+   * A way to get the distance between the robot and the powercell
+   * @return the distance between the robot and the powercell
+   */
   public double getTargetDistance() {
-    double[] defaultPose = {0, 0, 0};
-    double[] targetPose = targetPoseEntry.getDoubleArray(defaultPose);
-    return targetPose[0];
-   }
+    return powercellTarget.getCameraToTarget().getY();
+  }
 
+  /**
+   * Gets the angle of the powercell relative to the robot
+   * @return the angle of the powercell to the robot in degrees
+   */
   public double getAngle(){
-    double[] defaultPose = {0, 0, 0};
-    double[] targetPose = targetPoseEntry.getDoubleArray(defaultPose);
-    return targetPose[2];
-   }
+    return powercellTarget.getCameraToTarget().getRotation().getDegrees();
+  }
 
-   public double getTargetX() {
-     return yawEntry.getDouble(0);
-   }
-
-   
+  /**
+   * Gets the yaw displacement of the powercell relative to the robot
+   * @return the yaw of the powercell relative to the robot
+   */
+   public double getTargetYaw() {
+    return powercellTarget.getYaw();
+  }
 
   @Override
   public void periodic() {
